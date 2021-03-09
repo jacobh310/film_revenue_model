@@ -4,7 +4,7 @@ import pandas as pd
 
 movie_list = pd.read_csv('movie_links.csv', names=['title','link'])
 
-urls = movie_list['link'][:15]
+urls = movie_list['link']
 # urls = ['https://en.wikipedia.org/wiki/127_Hours', 'https://en.wikipedia.org/wiki/25th_Hour','https://en.wikipedia.org//wiki/Zero_Dark_Thirty']
 movies_df = pd.DataFrame()
 count = 1
@@ -44,4 +44,4 @@ for url in urls:
     count += 1
     movies_df = movies_df.append(infobox, ignore_index=True)
 
-# movies_df.to_csv('wiki_data.csv')
+movies_df.to_csv('wiki_data.csv')
