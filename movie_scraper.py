@@ -11,8 +11,10 @@ count = 1
 for url in urls:
     page = requests.get(url)
     soup = bs(page.text, 'lxml')
-    title = soup.find_all(id='firstHeading')[0].i.text
-
+    try:
+        title = soup.find_all(id='firstHeading')[0].i.text
+    except:
+        continue
     try:
         summary = soup.find_all(name='table',class_='infobox')[0]
     except:
