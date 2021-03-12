@@ -13,7 +13,7 @@ df = df[columns_keeping]
 df['Based on'] = df['Based on'].apply(lambda x: 0 if pd.isna(x) else 1)
 
 # clean columns
-for col in df.columns[1:]:
+for col in df.columns[1:].drop('Genres'):
     try:
         df[col] = df[col].str[3:-3]
     except:
@@ -124,6 +124,8 @@ def million(x):
         return budget
 df['Budget'] = df.apply(million,axis=1)
 df = df.drop(columns=['Release date length','million'])
+budget_drop = df[df['Budget']>500000000].index
+df = df.drop(index=budget_drop)
 
 # clean all columns with list objects in rows
 def clean_names(row):
@@ -154,6 +156,16 @@ df['Screenplay by'] = df['Screenplay by'].apply(clean_names)
 df['Distributed by'] = df['Distributed by'].apply(clean_names)
 df['Productioncompany '] = df['Productioncompany '].apply(clean_names)
 
+# clean genres
+def strip_genres(row):
+    if type(row) == list:
+        return [x.strip().lower() for x in row]
+    else:
+        return np.nan
+df['Genres']= df['Genres'].apply(lambda x: x if len(x)>2 else np.nan).str[1:-1]
+df['Genres']= df['Genres'].str.replace("'",'').str.replace('film','').str.split(',')
+df['Genres'] = df['Genres'].apply(strip_genres)
+
 # merge two production company columns
 def production(x):
     comp = x['Productioncompany ']
@@ -178,6 +190,38 @@ drop_langs = lang_counts[lang_counts<6].index
 df['Language']= df['Language'].apply(lambda x: 'other' if x in drop_langs else x)
 
 df = df.reset_index().drop(columns='index')
+
+def list_counts(col):
+    names = {}
+    for i in df[col]:
+        if type(i) == list:
+            for j in i:
+                if j not in names:
+                    names[j] = 1
+                else:
+                    names[j] +=1
+    count_df = pd.DataFrame.from_dict(names, orient='index', columns = ['Count'])
+    count_df = count_df.sort_values(by='Count', ascending=False)
+    return count_df
+
+upper = list_counts('Genres')[list_counts('Genres')>=16]
+upper.dropna(inplace=True)
+keep_genres = upper.index
+
+def drop_genres(row):
+    if type(row) == list:
+        genres = []
+        for i in row:
+            if i in keep_genres:
+                genres.append(i)
+            else:
+                genres.append('other')
+        return genres
+    else:
+        return np.nan
+
+
+df['Genres'] = df['Genres'].apply(drop_genres)
 
 # one hot encode the columns with list objects
 def make_dummies(df, col):
