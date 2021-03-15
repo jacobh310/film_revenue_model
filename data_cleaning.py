@@ -1,26 +1,21 @@
 import numpy as np
 import pandas as pd
 from datetime import datetime
-from sklearn.preprocessing import MultiLabelBinarizer
-
-# data cleaning
+import re
 
 df = pd.read_csv('wiki_data.csv')
-df=df[df.columns[1:]]
+df = df[df.columns[1:]]
 nan_values = df[df.columns[:26]].isna().sum().sort_values()
-columns_keeping = nan_values[nan_values<6000].index
+columns_keeping = nan_values[nan_values < 6000].index
 df = df[columns_keeping]
 df['Based on'] = df['Based on'].apply(lambda x: 0 if pd.isna(x) else 1)
 
-# clean columns
 for col in df.columns[1:].drop('Genres'):
     try:
         df[col] = df[col].str[3:-3]
     except:
         continue
 
-
-# clean running time
 df['Running time'] = df['Running time'].str.extract(r'(\d+)')
 df['Running time'] = pd.to_numeric(df['Running time'])
 
@@ -38,10 +33,10 @@ df['Productioncompanies '] = df['Productioncompanies '].str.split(',')
 df['Distributed by'] = df['Distributed by'].str.split(',')
 df['Productioncompany '] = df['Productioncompany '].str.split(',')
 
-## clean release date
+
 df['Release date'] = df['Release date'].str.split('(')
-df['Release date length'] = df['Release date'].apply(lambda x:len(x) if type(x) == list else x)
-df['Release date'] =  df['Release date'][df['Release date length']!=10]
+df['Release date length'] = df['Release date'].apply(lambda x: len(x) if type(x) == list else x)
+df['Release date'] = df['Release date'][df['Release date length'] != 10]
 
 def clean_release(row):
     if type(row) == list:
@@ -50,11 +45,11 @@ def clean_release(row):
         else:
             return row[1][:-1]
     else:
-        return np.nan
+        return row
 
 df['Release date'] = df['Release date'].apply(clean_release).str.split(')').str[0]
 
-# clean dates
+
 def fix_dates(row):
     if pd.isna(row):
         return row
@@ -67,16 +62,15 @@ def fix_dates(row):
             except:
                 return row
 
-
 df['Release date'] = df['Release date'].apply(fix_dates)
 df['Release date'] = df['Release date'].apply(lambda x: x if type(x) == datetime else np.nan)
 
-# clean box office
-import re
+
 
 df = df[df['Box office'].str.contains('$', na=False, regex=False)]  # remove any non dollar currency
 df = df[~df['Box office'].str.contains('admission', na=False,
                                        regex=False)]  # removes the 5 rows with admission in the box office col
+
 
 def clean_box(row):
     box = row[1:]
@@ -101,33 +95,46 @@ def clean_box(row):
         except:
             return np.nan
 
+
 df['Box office'] = df['Box office'].apply(clean_box)
 
-# clean budget
-df['million'] = df['Budget'].str.contains('millio',na=False,regex=False)
-df['Budget'] = df['Budget'].str[1:].apply(lambda x: re.split(' |\[', str(x))).str[0].str.replace(',','').str.split('\\').str[0]
+
+df['million'] = df['Budget'].str.contains('millio', na=False, regex=False)
+df['Budget'] = df['Budget'].apply(lambda x: x if '$' in str(x) else 'Unknown')
+df['Budget'] = \
+df['Budget'].str[1:].apply(lambda x: re.split(' |\[', str(x))).str[0].str.replace(',', '').str.split('\\').str[0]
 
 def clean_budget(x):
+    if x == 'Unknown':
+        return np.nan
     if '–' in x:
-        try: return (float(x.replace(',','').split('–')[0])+float(x.replace(',','').split('–')[1]))/2
-        except: return np.nan
+        try:
+            return (float(x.replace(',', '').split('–')[0]) + float(x.replace(',', '').split('–')[1])) / 2
+        except:
+            return np.nan
     else:
-        try: return float(x)
-        except: return np.nan
+        try:
+            return float(x)
+        except:
+            return np.nan
+
 df['Budget'] = df['Budget'].apply(clean_budget)
+
 
 def million(x):
     budget = x['Budget']
     if x['million'] == True:
-        return budget*1000000
+        return budget * 1000000
     else:
         return budget
-df['Budget'] = df.apply(million,axis=1)
-df = df.drop(columns=['Release date length','million'])
-budget_drop = df[df['Budget']>500000000].index
+
+
+df['Budget'] = df.apply(million, axis=1)
+df = df.drop(columns=['Release date length', 'million'])
+budget_drop = df[df['Budget'] > 500000000].index
 df = df.drop(index=budget_drop)
 
-# clean all columns with list objects in rows
+
 def clean_names(row):
     row_list = []
     if type(row) == list:
@@ -143,7 +150,6 @@ def clean_names(row):
     else:
         return np.nan
 
-
 df['Starring'] = df['Starring'].apply(clean_names)
 df['Produced by'] = df['Produced by'].apply(clean_names)
 df['Edited by'] = df['Edited by'].apply(clean_names)
@@ -156,17 +162,18 @@ df['Screenplay by'] = df['Screenplay by'].apply(clean_names)
 df['Distributed by'] = df['Distributed by'].apply(clean_names)
 df['Productioncompany '] = df['Productioncompany '].apply(clean_names)
 
-# clean genres
+
 def strip_genres(row):
     if type(row) == list:
         return [x.strip().lower() for x in row]
     else:
         return np.nan
-df['Genres']= df['Genres'].apply(lambda x: x if len(x)>2 else np.nan).str[1:-1]
-df['Genres']= df['Genres'].str.replace("'",'').str.replace('film','').str.split(',')
+
+df['Genres'] = df['Genres'].apply(lambda x: x if len(x) > 2 else np.nan).str[1:-1]
+df['Genres'] = df['Genres'].str.replace("'", '').str.replace('film', '').str.split(',')
 df['Genres'] = df['Genres'].apply(strip_genres)
 
-# merge two production company columns
+# Merge productioncompanies and productioncompany columns
 def production(x):
     comp = x['Productioncompany ']
     comps = x['Productioncompanies ']
@@ -177,19 +184,18 @@ def production(x):
     else:
         return comp + comps
 
-
 df['Production companies'] = df.apply(production, axis=1)
 df['Production companies'] = df['Production companies'].apply(clean_names)
 df = df.drop(columns=['Productioncompanies ', 'Productioncompany '])
 
 # Feature Engineering: Category reduction
-df['Country']=df['Country'].str.split('[').str[0].apply(lambda x:'other' if 'United States' not in str(x) else 'United States')
+
+df['Country'] = df['Country'].str.split('[').str[0].apply(
+    lambda x: 'other' if 'United States' not in str(x) else 'United States')
 df['Language'] = df['Language'].str.split('[').str[0]
 lang_counts = df['Language'].value_counts()
-drop_langs = lang_counts[lang_counts<6].index
-df['Language']= df['Language'].apply(lambda x: 'other' if x in drop_langs else x)
-
-df = df.reset_index().drop(columns='index')
+drop_langs = lang_counts[lang_counts < 6].index
+df['Language'] = df['Language'].apply(lambda x: 'other' if x in drop_langs else x)
 
 def list_counts(col):
     names = {}
@@ -199,14 +205,16 @@ def list_counts(col):
                 if j not in names:
                     names[j] = 1
                 else:
-                    names[j] +=1
-    count_df = pd.DataFrame.from_dict(names, orient='index', columns = ['Count'])
+                    names[j] += 1
+    count_df = pd.DataFrame.from_dict(names, orient='index', columns=['Count'])
     count_df = count_df.sort_values(by='Count', ascending=False)
     return count_df
 
-upper = list_counts('Genres')[list_counts('Genres')>=16]
+
+upper = list_counts('Genres')[list_counts('Genres') >= 16]
 upper.dropna(inplace=True)
 keep_genres = upper.index
+
 
 def drop_genres(row):
     if type(row) == list:
@@ -223,34 +231,4 @@ def drop_genres(row):
 
 df['Genres'] = df['Genres'].apply(drop_genres)
 
-# one hot encode the columns with list objects
-def make_dummies(df, col):
-    dummy_df = df.copy()
-    mlb = MultiLabelBinarizer()
-    starring_nan = dummy_df[dummy_df[col].isna()].drop(columns=col)
-    dummy_df = dummy_df[~dummy_df[col].isna()]
-
-    dummy_df = dummy_df.join(pd.DataFrame(mlb.fit_transform(dummy_df.pop(col)),
-                                          columns=mlb.classes_,
-                                          index=dummy_df.index))
-
-    combined = pd.concat([dummy_df, starring_nan], axis=0)
-    dummies = combined.iloc[:, df.shape[1] - 1:].fillna(0)
-
-    return dummies
-
-
-cols = df.select_dtypes('object').columns.drop(['Language','Country','Title'])
-new_df = df.copy()
-for col in cols:
-    x = make_dummies(new_df, col)
-    df = pd.concat([df,x], axis = 1)
-
-df_out = df.drop(columns=cols)
-
-df_out.to_csv('cleaned_data.csv', index=False)
-
-
-
-
-
+df.to_csv('cleaned_data.csv',index=False)
