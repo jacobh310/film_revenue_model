@@ -4,14 +4,14 @@ import streamlit as st
 import matplotlib.pyplot as plt
 import seaborn as sns
 import warnings
+
 warnings.filterwarnings('ignore')
 from datetime import datetime
 import util
 import pickle
 
-
 st.set_page_config(layout="wide")
-option = st.sidebar.selectbox('Which Dash Board',('Exploratory Data Analysis','Machine Learning Model'))
+option = st.sidebar.selectbox('Which Dash Board', ('Exploratory Data Analysis', 'Machine Learning Model'))
 st.markdown("<h1 style='text-align: center; color:#295E61 ;'>Film Box Office Exploratory Data Analysis and Model</h1>",
             unsafe_allow_html=True)
 
@@ -22,17 +22,18 @@ st.write(
 
 if option == 'Exploratory Data Analysis':
 
-
-
     col1, col2 = st.beta_columns(2)
-    col1.markdown("<h3 style='text-align: center; color:#295E61 ;'> Numerical Distributions</h3>", unsafe_allow_html=True)
+    col1.markdown("<h3 style='text-align: center; color:#295E61 ;'> Numerical Distributions</h3>",
+                  unsafe_allow_html=True)
     col1.pyplot(util.histograms())
 
-    col2.markdown("<h3 style='text-align: center; color:#295E61 ;'> Numerical Data Overview</h3>", unsafe_allow_html=True)
-    col2.dataframe(util.df[['Box office','Budget','Running time']].describe())
+    col2.markdown("<h3 style='text-align: center; color:#295E61 ;'> Numerical Data Overview</h3>",
+                  unsafe_allow_html=True)
+    col2.dataframe(util.df[['Box office', 'Budget', 'Running time']].describe())
 
     ## counts bar charts
-    st.markdown("<h2 style='text-align: center; color:#295E61 ;'>Movie Statistical Counts  </h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color:#295E61 ;'>Movie Statistical Counts  </h2>",
+                unsafe_allow_html=True)
     st.pyplot(util.plot_counts())
     st.markdown("<h4 style='text-align: center; color:#295E61 ;'>Observations</h4>", unsafe_allow_html=True)
     st.markdown("""<p style='text-align: left; color:#000000 ;'>- Friday is the day with the most film releases 
@@ -41,9 +42,9 @@ if option == 'Exploratory Data Analysis':
                          <br> - Reboots, sequels, prequels make up a small amount of total movies released
                          /p>""", unsafe_allow_html=True)
 
-
     ## means bar chart
-    st.markdown("<h2 style='text-align: center; color:#295E61 ;'>Movie Box Office Averages  </h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color:#295E61 ;'>Movie Box Office Averages  </h2>",
+                unsafe_allow_html=True)
     st.write("""       
        """)
     st.pyplot(util.plot_box_means())
@@ -58,8 +59,9 @@ if option == 'Exploratory Data Analysis':
                           <br> - Box Office sales also decrease for a little around the 
                           </p>""", unsafe_allow_html=True)
 
-
-    st.markdown("<h2 style='text-align: center; color:#295E61 ;'>Movie Box Office Averages for most popular in each category  </h2>", unsafe_allow_html=True)
+    st.markdown(
+        "<h2 style='text-align: center; color:#295E61 ;'>Movie Box Office Averages for most popular in each category  </h2>",
+        unsafe_allow_html=True)
     st.write("""       
        """)
     st.pyplot(util.plot_lists())
@@ -71,26 +73,35 @@ if option == 'Exploratory Data Analysis':
 
 else:
     st.header('Random Forest Model')
-    with open('final_film_model','rb') as f:
+    with open('final_film_model', 'rb') as f:
         model = pickle.load(f)
 
-
-    title = st.selectbox('Which Film', util.top_titles)
-    title_df = util.top_new[util.top_new.columns.drop(['Year','Month','Day'])][util.top_new['Title'] == title]
-    tran_df = title_df.reset_index().drop(columns='index').T
-    # tran_df.rename({0:'Attributes'}, axis=1, inplace=True)
+    title = st.selectbox('Which Film', tuple(util.top_films_list['Title'].tolist()))
+    features = util.top_films_list[util.top_films_list['Title'] == title].index[0]
+    prediction = model.predict(util.top_df.values[0].reshape(1, -1))[0]
+    st.markdown(
+        f"<h2 style='text-align: center; color:#00000 ;'>The predicted box office for {title} is ${prediction:0.0f}</h2>",
+        unsafe_allow_html=True)
 
     col1, col2 = st.beta_columns(2)
-    col1.dataframe(tran_df)
 
-    features = util.top_films_dum[util.top_films_dum['Title']==title]
-    features = features.drop(columns=['Box office','Title'])
+    title_df = util.new_df[util.new_df.columns.drop(['Year', 'Month', 'Day'])][util.new_df['Title'] == title]
+    title_df = title_df[title_df['Box office'] == title_df['Box office'].max()]
+    tran_df = title_df.reset_index().drop(columns='index').T
+    tran_df.rename({0: 'Attributes'}, axis=1, inplace=True)
 
-    if title_df.shape[0] == 1:
-        box_office = title_df['Box office'].values.reshape(1,-1)
-        col2.write(title_df['Box office'].values)
-    else:
-        box_office = title_df['Box office'].values
-        col2.write(title_df['Box office'].values)
+    col1.dataframe(tran_df, height=600)
 
-    # preditction = model.predict
+
+    def model_bar():
+        fig, ax = plt.subplots()
+        sns.barplot(x=['Actual Box Office', 'Predicted Box Office', 'Budget', 'Mean'],
+                    y=[title_df['Box office'].values[0], prediction, title_df['Budget'].values[0],
+                       util.new_df['Box office'].mean()], ax=ax)
+        ax.set_title(f"{title}'s Financials")
+        ax.set_xticklabels(ax.get_xticklabels(), rotation=60)
+        ax.set_ylabel('US Dollars')
+        return fig
+
+
+    col2.pyplot(model_bar())
