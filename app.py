@@ -1,4 +1,3 @@
-import plotly.graph_objs as go
 import pandas as pd
 import numpy as np
 import streamlit as st
@@ -7,57 +6,91 @@ import seaborn as sns
 import warnings
 warnings.filterwarnings('ignore')
 from datetime import datetime
+import util
+import pickle
 
-
-
-df = pd.read_csv('cleaned_data.csv')
-
-df.rename({'rsp': 'Reboot Sequel or Prequel'}, axis=1, inplace=True)
-df['Release date'] = df['Release date'].apply(lambda x: np.nan if pd.isna(x) else datetime.strptime(x, "%Y-%m-%d"))
-df['Year'] = df['Release date'].dt.year
-df['Month'] = df['Release date'].dt.month
-df['Day'] = df['Release date'].dt.day
-df['Day of week'] = df['Release date'].apply(lambda x: x.weekday())
-df['is_weekend'] = df['Day of week'].apply(lambda x: 1 if x >= 4 else 0)
-df = df[df['Year'] >= 1990]
 
 st.set_page_config(layout="wide")
-
-st.markdown("<h1 style='text-align: center; color:#295E61 ;'>Film Box Office Model</h1>",
+option = st.sidebar.selectbox('Which Dash Board',('Exploratory Data Analysis','Machine Learning Model'))
+st.markdown("<h1 style='text-align: center; color:#295E61 ;'>Film Box Office Exploratory Data Analysis and Model</h1>",
             unsafe_allow_html=True)
 
 st.write(
-    """This web app contains an Exploratory Data Analysis on American Films since the 1990s. 
+    """This web app contains an Exploratory Data Analysis on American Films since the 1990s with a total of around 6000 movies. 
     It also contains a Random Forest  model that predicts a films box office with data from before released. All the 
-     app is scrapped from wikipedia so data and algorithm results may be a little off""")
+     data is scrapped from wikipedia so the data is expected to be slightly off""")
+
+if option == 'Exploratory Data Analysis':
 
 
-def list_counts(col, df):
-    names = {}
-    for i in df[col]:
-        if type(i) == list:
-            for j in i:
-                if j not in names:
-                    names[j] = 1
-                else:
-                    names[j] += 1
-    count_df = pd.DataFrame.from_dict(names, orient='index', columns=['Count'])
-    count_df = count_df.sort_values(by='Count', ascending=False)
-    return count_df
+
+    col1, col2 = st.beta_columns(2)
+    col1.markdown("<h3 style='text-align: center; color:#295E61 ;'> Numerical Distributions</h3>", unsafe_allow_html=True)
+    col1.pyplot(util.histograms())
+
+    col2.markdown("<h3 style='text-align: center; color:#295E61 ;'> Numerical Data Overview</h3>", unsafe_allow_html=True)
+    col2.dataframe(util.df[['Box office','Budget','Running time']].describe())
+
+    ## counts bar charts
+    st.markdown("<h2 style='text-align: center; color:#295E61 ;'>Movie Statistical Counts  </h2>", unsafe_allow_html=True)
+    st.pyplot(util.plot_counts())
+    st.markdown("<h4 style='text-align: center; color:#295E61 ;'>Observations</h4>", unsafe_allow_html=True)
+    st.markdown("""<p style='text-align: left; color:#000000 ;'>- Friday is the day with the most film releases 
+                        <br> - September (9) is the month with the most movie releases
+                         <br> - Movies released per year seems consistent   <
+                         <br> - Reboots, sequels, prequels make up a small amount of total movies released
+                         /p>""", unsafe_allow_html=True)
 
 
-def plot_counts():
-    cats = ['Language', 'Country', 'Year', 'Month', 'Day', 'Day of week', 'Based on', 'Reboot Sequel or Prequel']
-    fig, axes = plt.subplots(nrows=4, ncols=2, figsize=(16, 28))
+    ## means bar chart
+    st.markdown("<h2 style='text-align: center; color:#295E61 ;'>Movie Box Office Averages  </h2>", unsafe_allow_html=True)
+    st.write("""       
+       """)
+    st.pyplot(util.plot_box_means())
+    st.markdown("<h4 style='text-align: center; color:#295E61 ;'>Observations</h4>", unsafe_allow_html=True)
+    st.markdown("""<p style='text-align: left; color:#000000 ;
+                        '> - Movies in hindi have the highest average. This is because India has huge audience so they're is a substantial American and Indian 
+                        <br> - Even though Friday has the most amount of movie releases, it us amounts the lowest for average. More more selection means less revenue
+                        <br> - September was also the month with the month with the most releases but had the lowest average box office revenue
+                         <br> - Sequels, prequels and reboots have a higher box office average than their opposite counter part
+                         <br> - Movies based on a book or true story also have  higher box averages their opposite counter part
+                          <br> - Box Office sales are increase on a yearly bases which is probably inline with inflation
+                          <br> - Box Office sales also decrease for a little around the 
+                          </p>""", unsafe_allow_html=True)
 
-    for i, ax in enumerate(axes.flatten()):
-        sns.countplot(df[cats[i]], ax=ax)
-        ax.set_title(cats[i] + ' counts', fontsize=20)
-        ax.set_xlabel(cats[i], fontsize=16)
-        ax.set_ylabel('Count', fontsize=16)
-        ax.set_xticklabels(ax.get_xticklabels(), rotation=90)
-    plt.tight_layout()
-    plt.show()
+
+    st.markdown("<h2 style='text-align: center; color:#295E61 ;'>Movie Box Office Averages for most popular in each category  </h2>", unsafe_allow_html=True)
+    st.write("""       
+       """)
+    st.pyplot(util.plot_lists())
+    # st.markdown("<h4 style='text-align: center; color:#295E61 ;'>Observations</h4>", unsafe_allow_html=True)
+    # st.markdown("""<p style='text-align: left; color:#000000 ;
+    #                     '> - Disney is an outlier in both for Distribution and Production
+    #                     <br> - Quentin Tarintino, M. Night
+    #                       </p>""", unsafe_allow_html=True)
+
+else:
+    st.header('Random Forest Model')
+    with open('final_film_model','rb') as f:
+        model = pickle.load(f)
 
 
-st.pyplot(plot_counts())
+    title = st.selectbox('Which Film', util.top_titles)
+    title_df = util.top_new[util.top_new.columns.drop(['Year','Month','Day'])][util.top_new['Title'] == title]
+    tran_df = title_df.reset_index().drop(columns='index').T
+    # tran_df.rename({0:'Attributes'}, axis=1, inplace=True)
+
+    col1, col2 = st.beta_columns(2)
+    col1.dataframe(tran_df)
+
+    features = util.top_films_dum[util.top_films_dum['Title']==title]
+    features = features.drop(columns=['Box office','Title'])
+
+    if title_df.shape[0] == 1:
+        box_office = title_df['Box office'].values.reshape(1,-1)
+        col2.write(title_df['Box office'].values)
+    else:
+        box_office = title_df['Box office'].values
+        col2.write(title_df['Box office'].values)
+
+    # preditction = model.predict
