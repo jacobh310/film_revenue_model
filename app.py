@@ -78,7 +78,7 @@ else:
 
     title = st.selectbox('Which Film', tuple(util.top_films_list['Title'].tolist()))
     features = util.top_films_list[util.top_films_list['Title'] == title].index[0]
-    prediction = model.predict(util.top_df.values[0].reshape(1, -1))[0]
+    prediction = model.predict(util.top_df.values[features].reshape(1, -1))[0]
     st.markdown(
         f"<h2 style='text-align: center; color:#00000 ;'>The predicted box office for {title} is ${prediction:0.0f}</h2>",
         unsafe_allow_html=True)
