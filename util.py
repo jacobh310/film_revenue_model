@@ -13,8 +13,8 @@ df['Year'] = df['Release date'].dt.year
 df['Month'] = df['Release date'].dt.month
 df['Day'] = df['Release date'].dt.day
 df['Day of week'] = df['Release date'].apply(lambda x: x.weekday())
-# df['is_weekend'] = df['Day of week'].apply(lambda x: 1 if x >= 4 else 0)
 df = df[df['Year'] >= 1990]
+df = df[df['Budget'] != 0]
 
 df['Year'] = df['Year'].astype('int')
 df['Month'] = df['Month'].astype('int')
@@ -23,6 +23,8 @@ df['Day of week'] = df['Day of week'].astype('int')
 df['Reboot Sequel or Prequel'] = df['Reboot Sequel or Prequel'].apply(lambda x: True if x ==1 else False)
 df['Based on'] = df['Based on'].apply(lambda x: True if x ==1 else False)
 
+days = {0:'Monday',1:'Tuesday' , 2:'Wednesday' , 3:'Thursday' ,4:'Friday' ,5:'Saturday' , 6:'Synday'}
+df['Day of week'] = df['Day of week'].map(days)
 
 cats = ['Language', 'Country', 'Year', 'Month', 'Day', 'Day of week', 'Based on', 'Reboot Sequel or Prequel']
 roles = df.select_dtypes('object').columns.drop(['Language','Country','Title'])
@@ -100,5 +102,20 @@ def plot_lists():
             ax.set_ylabel('Average',fontsize=16)
             ax.set_xticklabels(ax.get_xticklabels(), rotation=75, fontsize=12)
     fig.delaxes(axes[3,2])
+    plt.tight_layout()
+    return fig
+
+def histograms():
+    fig, axes = plt.subplots(nrows=2, ncols=2, figsize=(10,8))
+    axes[0,0].hist(df['Box office'], bins=75)
+    axes[0,0].set_title('Box office ($)')
+
+    axes[0,1].hist(df['Budget'], bins=75)
+    axes[0,1].set_title('Box office ($)')
+
+    axes[1,0].hist(df['Running time'], bins=75)
+    axes[1,0].set_title('Running time (minutes')
+
+    fig.delaxes(axes[1,1])
     plt.tight_layout()
     return fig
