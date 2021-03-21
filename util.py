@@ -5,6 +5,7 @@ import seaborn as sns
 from datetime import datetime
 import streamlit as st
 
+
 df = pd.read_csv('cleaned_data.csv')
 
 df.rename({'rsp': 'Reboot Sequel or Prequel'}, axis=1, inplace=True)
@@ -120,6 +121,9 @@ def histograms():
     plt.tight_layout()
     return fig
 
-top_films_dum = pd.read_csv('top_films.csv',index_col=0)
-top_titles = top_films_dum['Title'].tolist()
-top_new = new_df[new_df.apply(lambda x: True if x['Title'] in top_titles else False, axis =1)]
+
+
+top_films_list = pd.read_csv('top_films_index.csv')
+top_df = pd.read_csv('top_films_scaled.csv',index_col=0)
+# top_titles = top_films_dum['Title'].tolist()
+# top_new = new_df[new_df.apply(lambda x: True if x['Title'] in top_titles else False, axis =1)]
