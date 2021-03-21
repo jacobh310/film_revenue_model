@@ -23,7 +23,7 @@ df['Day of week'] = df['Day of week'].astype('int')
 df['Reboot Sequel or Prequel'] = df['Reboot Sequel or Prequel'].apply(lambda x: True if x ==1 else False)
 df['Based on'] = df['Based on'].apply(lambda x: True if x ==1 else False)
 
-days = {0:'Monday',1:'Tuesday' , 2:'Wednesday' , 3:'Thursday' ,4:'Friday' ,5:'Saturday' , 6:'Synday'}
+days = {0:'Monday',1:'Tuesday' , 2:'Wednesday' , 3:'Thursday' ,4:'Friday' ,5:'Saturday' , 6:'Sunday'}
 df['Day of week'] = df['Day of week'].map(days)
 
 cats = ['Language', 'Country', 'Year', 'Month', 'Day', 'Day of week', 'Based on', 'Reboot Sequel or Prequel']
@@ -119,3 +119,7 @@ def histograms():
     fig.delaxes(axes[1,1])
     plt.tight_layout()
     return fig
+
+top_films_dum = pd.read_csv('top_films.csv',index_col=0)
+top_titles = top_films_dum['Title'].tolist()
+top_new = new_df[new_df.apply(lambda x: True if x['Title'] in top_titles else False, axis =1)]

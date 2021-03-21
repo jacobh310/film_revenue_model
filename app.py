@@ -74,15 +74,23 @@ else:
     with open('final_film_model','rb') as f:
         model = pickle.load(f)
 
-    titles = tuple(util.df['Title'].tolist())
-    title = st.selectbox('Which Film', titles)
-    title_df = util.new_df[util.new_df.columns.drop(['Year','Month','Day'])][util.df['Title'] == title]
-    tran_df = title_df.T
-    tran_df.rename({0:'Attributes'}, axis=1, inplace=True)
+
+    title = st.selectbox('Which Film', util.top_titles)
+    title_df = util.top_new[util.top_new.columns.drop(['Year','Month','Day'])][util.top_new['Title'] == title]
+    tran_df = title_df.reset_index().drop(columns='index').T
+    # tran_df.rename({0:'Attributes'}, axis=1, inplace=True)
 
     col1, col2 = st.beta_columns(2)
     col1.dataframe(tran_df)
 
-    box_office = title_df['Box office'].values.reshape(1,-1)
-    col2.write(title_df['Box office'].values)
+    features = util.top_films_dum[util.top_films_dum['Title']==title]
+    features = features.drop(columns=['Box office','Title'])
+
+    if title_df.shape[0] == 1:
+        box_office = title_df['Box office'].values.reshape(1,-1)
+        col2.write(title_df['Box office'].values)
+    else:
+        box_office = title_df['Box office'].values
+        col2.write(title_df['Box office'].values)
+
     # preditction = model.predict
