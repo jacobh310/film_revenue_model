@@ -7,10 +7,10 @@ import warnings
 
 warnings.filterwarnings('ignore')
 from datetime import datetime
+st.set_page_config(layout="wide")
 import util
 import pickle
 
-# st.set_page_config(layout="wide")
 option = st.sidebar.selectbox('Which Dash Board', ('Exploratory Data Analysis', 'Machine Learning Model'))
 st.markdown("<h1 style='text-align: center; color:#295E61 ;'>Film Box Office Exploratory Data Analysis and Model</h1>",
             unsafe_allow_html=True)
