@@ -1,7 +1,6 @@
 .idea/
 venv/
 .ipynb_checkpoints
-cleaned_data.csv
 IMDb_movies.csv
 cleaned_data_dummies.csv
 x_scaled.csv
