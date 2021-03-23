@@ -5,11 +5,15 @@ import seaborn as sns
 from datetime import datetime
 import streamlit as st
 
+@st.cache(allow_output_mutation=True)
+def load_df():
+    return pd.read_csv('cleaned_data.csv')
+data = load_df()
+df = data.copy()
 
-df = pd.read_csv('cleaned_data.csv')
 
 df.rename({'rsp': 'Reboot Sequel or Prequel'}, axis=1, inplace=True)
-df['Release date'] = df['Release date'].apply(lambda x: np.nan if pd.isna(x) else datetime.strptime(x, "%Y-%m-%d"))
+df['Release date'] = df['Release date'].apply(lambda x: np.nan if pd.isna(x) else datetime.strptime(str(x)[:10], "%Y-%m-%d"))
 df['Year'] = df['Release date'].dt.year
 df['Month'] = df['Release date'].dt.month
 df['Day'] = df['Release date'].dt.day
@@ -50,7 +54,7 @@ def list_counts(col,df):
     return count_df
 
 
-def plot_counts():
+def plot_counts(df):
     fig, axes = plt.subplots(nrows=2, ncols=4, figsize=(22, 10))
 
     for i, ax in enumerate(axes.flatten()):
@@ -68,7 +72,7 @@ def plot_counts():
     return  fig
 
 
-def plot_box_means():
+def plot_box_means(df):
     fig, axes = plt.subplots(nrows=2, ncols=4, figsize = (22,10))
 
     for i, ax in enumerate(axes.flatten()):
@@ -87,7 +91,7 @@ def plot_box_means():
     return fig
 
 
-def plot_lists():
+def plot_lists(df,new_df):
     fig, axes = plt.subplots(nrows=4, ncols=3, figsize = (24,30))
     feature='Box office'
 
@@ -106,7 +110,7 @@ def plot_lists():
     plt.tight_layout()
     return fig
 
-def histograms():
+def histograms(df):
     fig, axes = plt.subplots(nrows=2, ncols=2, figsize=(10,8))
     axes[0,0].hist(df['Box office'], bins=75)
     axes[0,0].set_title('Box office ($)')

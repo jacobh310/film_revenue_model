@@ -10,7 +10,7 @@ from datetime import datetime
 import util
 import pickle
 
-st.set_page_config(layout="wide")
+# st.set_page_config(layout="wide")
 option = st.sidebar.selectbox('Which Dash Board', ('Exploratory Data Analysis', 'Machine Learning Model'))
 st.markdown("<h1 style='text-align: center; color:#295E61 ;'>Film Box Office Exploratory Data Analysis and Model</h1>",
             unsafe_allow_html=True)
@@ -25,7 +25,7 @@ if option == 'Exploratory Data Analysis':
     col1, col2 = st.beta_columns(2)
     col1.markdown("<h3 style='text-align: center; color:#295E61 ;'> Numerical Distributions</h3>",
                   unsafe_allow_html=True)
-    col1.pyplot(util.histograms())
+    col1.pyplot(util.histograms(util.df))
 
     col2.markdown("<h3 style='text-align: center; color:#295E61 ;'> Numerical Data Overview</h3>",
                   unsafe_allow_html=True)
@@ -34,7 +34,7 @@ if option == 'Exploratory Data Analysis':
     ## counts bar charts
     st.markdown("<h2 style='text-align: center; color:#295E61 ;'>Movie Statistical Counts  </h2>",
                 unsafe_allow_html=True)
-    st.pyplot(util.plot_counts())
+    st.pyplot(util.plot_counts(util.df))
     st.markdown("<h4 style='text-align: center; color:#295E61 ;'>Observations</h4>", unsafe_allow_html=True)
     st.markdown("""<p style='text-align: left; color:#000000 ;'>- Friday is the day with the most film releases 
                         <br> - September (9) is the month with the most movie releases
@@ -47,7 +47,7 @@ if option == 'Exploratory Data Analysis':
                 unsafe_allow_html=True)
     st.write("""       
        """)
-    st.pyplot(util.plot_box_means())
+    st.pyplot(util.plot_box_means(util.df))
     st.markdown("<h4 style='text-align: center; color:#295E61 ;'>Observations</h4>", unsafe_allow_html=True)
     st.markdown("""<p style='text-align: left; color:#000000 ;
                         '> - Movies in hindi have the highest average. This is because India has huge audience so they're is a substantial American and Indian 
@@ -64,7 +64,7 @@ if option == 'Exploratory Data Analysis':
         unsafe_allow_html=True)
     st.write("""       
        """)
-    st.pyplot(util.plot_lists())
+    st.pyplot(util.plot_lists(util.df,util.new_df))
     # st.markdown("<h4 style='text-align: center; color:#295E61 ;'>Observations</h4>", unsafe_allow_html=True)
     # st.markdown("""<p style='text-align: left; color:#000000 ;
     #                     '> - Disney is an outlier in both for Distribution and Production
