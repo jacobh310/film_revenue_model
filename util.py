@@ -78,9 +78,9 @@ def plot_box_means(df):
     for i, ax in enumerate(axes.flatten()):
         sns.barplot(x=cats[i],y='Box office',data=df, ci=None, ax=ax)
         if cats[i] == 'Based on':
-            ax.set_title(cats[i] + ' true story or book Box Office Mean', fontsize=14)
+            ax.set_title(cats[i] + ' true story or book Box Office Mean', fontsize=13)
         elif cats[i] == 'Reboot Sequel or Prequel':
-            ax.set_title(cats[i] + 'Box Office Mean', fontsize=14)
+            ax.set_title(cats[i] + 'Box Office Mean', fontsize=13)
         else:
             ax.set_title(cats[i] + ' Box Office Mean', fontsize=20)
 
@@ -128,6 +128,7 @@ def histograms(df):
 
 
 top_films_list = pd.read_csv('top_films_index.csv')
-top_df = pd.read_csv('top_films_scaled.csv',index_col=0)
-# top_titles = top_films_dum['Title'].tolist()
-# top_new = new_df[new_df.apply(lambda x: True if x['Title'] in top_titles else False, axis =1)]
+@st.cache(allow_output_mutation=True)
+def load_top():
+    return  pd.read_csv('top_films_scaled.csv',index_col=0)
+top_df = load_top()
