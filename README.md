@@ -28,8 +28,19 @@ Movies have largebudgets for good reason. Great starting cast and crew cost more
 - Box office adaptaions, reboots, sequels, and prequels are, on average, higher than their opposite counterparts 
 - Explains why studios want to produce these kinds of films
 
+# Results
+![Alt text](https://github.com/jacobh310/film_revenue_model/blob/master/images/feat_importance.JPG?raw=true "Sentiment")
+- Budget was left out of the chart becasue it was disproportionately more important thatn than the other features. 
+## Algorithims tested
+- Linear regression
+- Lasso regression
+- Ridge Regression
+- XGBoost regressor 
+- Random Forest regressors <---- High Cross Validation and Testing Score
+### R2 score: 0.56
+- Is subaverage R2 score. One of the reasons may be that the data was scraped of Wikipedia which may not have all correct information.
 
-## resources 
+## Resources 
 Code for part scrapers:
   - github: https://gist.github.com/alexanderholt/d08fef44153672807c571166b592aa4e
   - medium:https://medium.com/@Alexander_H/scraping-wikipedia-with-python-8000fc9c9e6c
